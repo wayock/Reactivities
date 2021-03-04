@@ -1,42 +1,48 @@
-import React from 'react'
+import { observer } from 'mobx-react-lite';
+import React, { useContext, useEffect } from 'react'
+import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, Card, Image } from 'semantic-ui-react';
-import { IActivity } from '../../../app/models/activity';
+import LoadingComponent from '../../../app/layout/LoadingComponent';
+import ActivityStore from '../../../app/stores/activityStore';
 
-interface IProps {
-  activity: IActivity
-  setEditMode: (editMode: boolean) => void;
-  setSelectedActivity: (activity: IActivity | null) => void;
+interface DetailParams{
+  id: string
 }
 
-const ActivityDetails: React.FC<IProps> = ({
-  activity,
-  setEditMode,
-  setSelectedActivity,
-}) => {
+const ActivityDetails: React.FC<RouteComponentProps<DetailParams>> = ({match, history}) => {
+  const activityStore = useContext(ActivityStore);
+  const {activity, openEditForm, loadActivity, loadingInitial} = activityStore;
+
+  useEffect(() => {
+    loadActivity(match.params.id)
+  }, [loadActivity])
+
+  if (loadingInitial || !activity) return <LoadingComponent content='Loading activity...' />
+
   return (
     <Card fluid>
       <Image
-        src={`/assets/categoryImages/${activity.category}.jpg`}
+        src={`/assets/categoryImages/${activity!.category}.jpg`}
         wrapped
         ui={false}
       />
       <Card.Content>
-        <Card.Header>{activity.title}</Card.Header>
+        <Card.Header>{activity!.title}</Card.Header>
         <Card.Meta>
-          <span className="date">{activity.date}</span>
+          <span className="date">{activity!.date}</span>
         </Card.Meta>
-        <Card.Description>{activity.description}</Card.Description>
+        <Card.Description>{activity!.description}</Card.Description>
       </Card.Content>
       <Card.Content extra>
         <Button.Group widths={2}>
           <Button
-            onClick={() => setEditMode(true)}
+            as={Link} to={`/manage/${activity.id}`}
             basic
             color="blue"
             content="Edit"
           />
           <Button
-            onClick={() => setSelectedActivity(null)}
+            onClick={() => history.push('/activities')}
             basic
             color="grey"
             content="Cancel"
@@ -47,4 +53,4 @@ const ActivityDetails: React.FC<IProps> = ({
   );
 };
 
-export default ActivityDetails
+export default observer(ActivityDetails);
